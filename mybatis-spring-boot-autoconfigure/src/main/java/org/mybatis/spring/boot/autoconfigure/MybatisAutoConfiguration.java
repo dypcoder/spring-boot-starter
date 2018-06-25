@@ -1,5 +1,5 @@
 /**
- *    Copyright 2015-2017 the original author or authors.
+ *    Copyright 2015-2018 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ResourceLoaderAware;
@@ -74,7 +74,7 @@ import org.springframework.util.StringUtils;
  */
 @org.springframework.context.annotation.Configuration
 @ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })
-@ConditionalOnBean(DataSource.class)
+@ConditionalOnSingleCandidate(DataSource.class)
 @EnableConfigurationProperties(MybatisProperties.class)
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 public class MybatisAutoConfiguration {
@@ -92,10 +92,10 @@ public class MybatisAutoConfiguration {
   private final List<ConfigurationCustomizer> configurationCustomizers;
 
   public MybatisAutoConfiguration(MybatisProperties properties,
-                                  ObjectProvider<Interceptor[]> interceptorsProvider,
-                                  ResourceLoader resourceLoader,
-                                  ObjectProvider<DatabaseIdProvider> databaseIdProvider,
-                                  ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider) {
+      ObjectProvider<Interceptor[]> interceptorsProvider,
+      ResourceLoader resourceLoader,
+      ObjectProvider<DatabaseIdProvider> databaseIdProvider,
+      ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider) {
     this.properties = properties;
     this.interceptors = interceptorsProvider.getIfAvailable();
     this.resourceLoader = resourceLoader;
@@ -121,16 +121,7 @@ public class MybatisAutoConfiguration {
     if (StringUtils.hasText(this.properties.getConfigLocation())) {
       factory.setConfigLocation(this.resourceLoader.getResource(this.properties.getConfigLocation()));
     }
-    Configuration configuration = this.properties.getConfiguration();
-    if (configuration == null && !StringUtils.hasText(this.properties.getConfigLocation())) {
-      configuration = new Configuration();
-    }
-    if (configuration != null && !CollectionUtils.isEmpty(this.configurationCustomizers)) {
-      for (ConfigurationCustomizer customizer : this.configurationCustomizers) {
-        customizer.customize(configuration);
-      }
-    }
-    factory.setConfiguration(configuration);
+    applyConfiguration(factory);
     if (this.properties.getConfigurationProperties() != null) {
       factory.setConfigurationProperties(this.properties.getConfigurationProperties());
     }
@@ -143,6 +134,9 @@ public class MybatisAutoConfiguration {
     if (StringUtils.hasLength(this.properties.getTypeAliasesPackage())) {
       factory.setTypeAliasesPackage(this.properties.getTypeAliasesPackage());
     }
+    if (this.properties.getTypeAliasesSuperType() != null) {
+      factory.setTypeAliasesSuperType(this.properties.getTypeAliasesSuperType());
+    }
     if (StringUtils.hasLength(this.properties.getTypeHandlersPackage())) {
       factory.setTypeHandlersPackage(this.properties.getTypeHandlersPackage());
     }
@@ -151,6 +145,19 @@ public class MybatisAutoConfiguration {
     }
 
     return factory.getObject();
+  }
+
+  private void applyConfiguration(SqlSessionFactoryBean factory) {
+    Configuration configuration = this.properties.getConfiguration();
+    if (configuration == null && !StringUtils.hasText(this.properties.getConfigLocation())) {
+      configuration = new Configuration();
+    }
+    if (configuration != null && !CollectionUtils.isEmpty(this.configurationCustomizers)) {
+      for (ConfigurationCustomizer customizer : this.configurationCustomizers) {
+        customizer.customize(configuration);
+      }
+    }
+    factory.setConfiguration(configuration);
   }
 
   @Bean

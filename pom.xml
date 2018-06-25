@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-       Copyright 2015-2017 the original author or authors.
+       Copyright 2015-2018 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.mybatis</groupId>
     <artifactId>mybatis-parent</artifactId>
-    <version>30</version>
+    <version>31-SNAPSHOT</version>
     <relativePath />
   </parent>
 
@@ -67,19 +67,9 @@
   </distributionManagement>
 
   <properties>
-    <mybatis.version>3.4.5</mybatis.version>
+    <mybatis.version>3.5.0-SNAPSHOT</mybatis.version>
     <mybatis-spring.version>2.0.0-SNAPSHOT</mybatis-spring.version>
-    <spring-boot.version>2.0.0.M7</spring-boot.version>
-
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <maven.compiler.testSource>1.8</maven.compiler.testSource>
-    <maven.compiler.testTarget>1.8</maven.compiler.testTarget>
-
-    <!-- Override: Animal Sniffer Signature -->
-    <signature.group>org.codehaus.mojo.signature</signature.group>
-    <signature.artifact>java18</signature.artifact>
-    <signature.version>1.0</signature.version>
+    <spring-boot.version>2.0.2.RELEASE</spring-boot.version>
   </properties>
 
   <dependencyManagement>
@@ -124,6 +114,24 @@
     </dependencies>
   </dependencyManagement>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.junit.vintage</groupId>
+              <artifactId>junit-vintage-engine</artifactId>
+              <version>${junit-engine.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
   <repositories>
     <repository>
       <id>spring-snapshots</id>
@@ -167,5 +175,5 @@
         <enabled>false</enabled>
       </snapshots>
     </pluginRepository>
-  </pluginRepositories> 
+  </pluginRepositories>
 </project>
